@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>틱택토 게임</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 50px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .cell {
+      width: 100px;
+      height: 100px;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2em;
+      cursor: pointer;
+    }
+    #status {
+      font-size: 1.5em;
+      margin-top: 20px;
+    }
+    #resetButton {
+      padding: 10px 20px;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>틱택토 게임</h1>
+  <div class="board">
+    <div class="cell" data-index="0"></div>
+    <div class="cell" data-index="1"></div>
+    <div class="cell" data-index="2"></div>
+    <div class="cell" data-index="3"></div>
+    <div class="cell" data-index="4"></div>
+    <div class="cell" data-index="5"></div>
+    <div class="cell" data-index="6"></div>
+    <div class="cell" data-index="7"></div>
+    <div class="cell" data-index="8"></div>
+  </div>
+  <button id="resetButton">게임 초기화</button>
+  <p id="status"></p>
+
+  <script>
+    const cells = document.querySelectorAll('.cell');
+    const statusText = document.getElementById('status');
+    const resetButton = document.getElementById('resetButton');
+    let currentPlayer = 'X';
+    let board = Array(9).fill(null);
+    let gameActive = true;
+    let moveCount = { 'X': 0, 'O': 0 };
+    let selectedCell = null;
+
+    const winningConditions = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+
+    function checkWinner() {
+      for (let i = 0; i < winningConditions.length; i++) {
+        const [a, b, c] = winningConditions[i];
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          gameActive = false;
+          statusText.textContent = `${board[a]} 승리!`;
+          return true;
+        }
+      }
+
+      if (!board.includes(null) && moveCount['X'] >= 3 && moveCount['O'] >= 3) {
+        statusText.textContent = '무승부!';
+        gameActive = false;
+        return true;
+      }
+      return false;
+    }
+
+    function handleClick(e) {
+      const index = e.target.getAttribute('data-index');
+
+      if (!gameActive) return;
+
+      if (selectedCell !== null) {
+        if (board[index] === null) {
+          board[selectedCell] = null;
+          board[index] = currentPlayer;
+          cells[selectedCell].textContent = '';
+          e.target.textContent = currentPlayer;
+          selectedCell = null;
+
+          if (checkWinner()) return;
+          currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+          statusText.textContent = `${currentPlayer} 차례입니다`;
+        } else {
+          statusText.textContent = '빈 칸에만 이동할 수 있습니다.';
+        }
+        return;
+      }
+
+      // 말을 놓는 경우
+      if (board[index] === null && moveCount[currentPlayer] < 3) {
+        board[index] = currentPlayer;
+        e.target.textContent = currentPlayer;
+        moveCount[currentPlayer]++;
+
+        if (moveCount[currentPlayer] === 3) {
+          statusText.textContent = `${currentPlayer}는 말을 이동해야 합니다.`;
+        }
+
+        if (checkWinner()) return;
+
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        statusText.textContent = `${currentPlayer} 차례입니다`;
+      } else if (board[index] === currentPlayer) {
+        // 자신의 말을 선택하여 이동할 준비
+        selectedCell = index;
+        statusText.textContent = `이동할 위치를 선택하세요.`;
+      }
+    }
+
+    function resetGame() {
+      board.fill(null);
+      cells.forEach(cell => (cell.textContent = ''));
+      currentPlayer = 'X';
+      gameActive = true;
+      moveCount = { 'X': 0, 'O': 0 };
+      selectedCell = null;
+      statusText.textContent = `${currentPlayer} 차례입니다`;
+    }
+
+    cells.forEach(cell => cell.addEventListener('click', handleClick));
+    resetButton.addEventListener('click', resetGame);
+
+    resetGame();
+  </script>
+</body>
+</html>
